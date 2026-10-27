@@ -1,0 +1,1001 @@
+html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>MatchToss Pro • Official Electronic Toss System</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Elite Sports Broadcast Typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:ital,wght@0,500;0,600;0,700;1,700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            display: ['"Chakra Petch"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          },
+          colors: {
+            navy: {
+              950: '#050a14',
+              900: '#0a1224',
+              850: '#0e1a32',
+              800: '#142343',
+              700: '#1f3562',
+            },
+            gold: {
+              300: '#fde047',
+              400: '#facc15',
+              500: '#eab308',
+              600: '#ca8a04',
+              700: '#a16207',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    * {
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    /* 3D Coin Space */
+    .viewport-3d {
+      perspective: 1400px;
+      perspective-origin: 50% 50%;
+    }
+
+    .preserve-3d {
+      transform-style: preserve-3d;
+      -webkit-transform-style: preserve-3d;
+    }
+
+    .backface-hidden {
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+    }
+
+    /* Coin Faces: Tournament Commemorative Spec */
+    .coin-heads-face {
+      background: radial-gradient(circle at 35% 28%, #fffef0 0%, #fef08a 22%, #eab308 55%, #a16207 88%, #713f12 100%);
+      box-shadow: 
+        inset 0 0 10px rgba(255, 255, 255, 0.9),
+        inset 0 0 25px rgba(161, 98, 7, 0.95),
+        0 14px 35px -8px rgba(0, 0, 0, 0.7);
+    }
+
+    .coin-tails-face {
+      background: radial-gradient(circle at 35% 28%, #ffffff 0%, #f1f5f9 20%, #94a3b8 52%, #475569 86%, #1e293b 100%);
+      box-shadow: 
+        inset 0 0 10px rgba(255, 255, 255, 0.95),
+        inset 0 0 25px rgba(30, 41, 59, 0.9),
+        0 14px 35px -8px rgba(0, 0, 0, 0.7);
+    }
+
+    /* Rim Edge Milling Texture */
+    .coin-edge-layer {
+      position: absolute;
+      inset: 0;
+      border-radius: 9999px;
+      pointer-events: none;
+      background: repeating-linear-gradient(
+        90deg,
+        #713f12 0px,
+        #fef08a 1.5px,
+        #713f12 3px
+      );
+      border: 1px solid rgba(113, 63, 18, 0.6);
+    }
+
+    /* Dynamic Coin Physics Transitions */
+    .coin-animating {
+      transition: transform 1.55s cubic-bezier(0.18, 0.88, 0.28, 1.04);
+    }
+
+    .shadow-animating {
+      transition: transform 1.55s cubic-bezier(0.18, 0.88, 0.28, 1.04), opacity 1.55s ease;
+    }
+
+    /* Subtle Scanline Effect for TV Broadcast aesthetic */
+    .broadcast-overlay {
+      background: linear-gradient(
+        rgba(10, 18, 36, 0) 50%, 
+        rgba(0, 0, 0, 0.25) 50%
+      ), linear-gradient(
+        90deg,
+        rgba(255, 0, 0, 0.03),
+        rgba(0, 255, 0, 0.01),
+        rgba(0, 0, 255, 0.03)
+      );
+      background-size: 100% 3px, 6px 100%;
+      pointer-events: none;
+    }
+
+    /* Custom Official Scrollbar */
+    ::-webkit-scrollbar {
+      width: 4px;
+      height: 4px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0a1224;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #1f3562;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body class="bg-navy-950 text-slate-100 min-h-screen flex flex-col justify-between overflow-x-hidden selection:bg-amber-500/20 font-sans relative">
+
+  <!-- Subtle Broadcast Scanline Texture Overlay -->
+  <div class="fixed inset-0 broadcast-overlay z-40 opacity-40"></div>
+
+  <!-- TOP OFFICIAL APP BAR -->
+  <header class="w-full bg-navy-900/90 border-b border-navy-700/60 backdrop-blur-xl sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-3 sm:px-6 py-2.5 flex items-center justify-between">
+      
+      <!-- ========================================== -->
+      <!-- TRIGGER ZONE 1: TOP-LEFT CREST / BRAND     -->
+      <!-- TRIPLE-TAP -> SECRET 90% HEADS             -->
+      <!-- ========================================== -->
+      <div id="triggerZoneHeads" class="flex items-center gap-3 cursor-pointer py-1 select-none active:opacity-85 transition-opacity" title="Tournament Registry ID #2026-T4">
+        <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-gradient-to-br from-navy-800 to-navy-950 border border-navy-700 flex items-center justify-center shadow-lg shadow-black/60 relative overflow-hidden group">
+          <div class="absolute inset-0 bg-gradient-to-tr from-amber-500/10 to-transparent"></div>
+          <!-- Crest Icon -->
+          <svg class="w-6 h-6 text-gold-400 group-hover:scale-105 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 2L4 5v6.09c0 5.05 3.41 9.76 8 10.91 4.59-1.15 8-5.86 8-10.91V5l-8-3z" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 8v5m-2-2h4" />
+          </svg>
+        </div>
+
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="font-display font-bold text-base sm:text-lg tracking-wider text-white uppercase flex items-center gap-1.5">
+              MatchToss <span class="text-gold-400 font-extrabold text-xs px-1.5 py-0.5 rounded bg-gold-400/10 border border-gold-400/30">PRO</span>
+            </span>
+          </div>
+          <div class="flex items-center gap-2 text-[10px] sm:text-[11px] text-slate-400 font-medium">
+            <span class="text-slate-300">ICC/FIFA Protocol #8.4</span>
+            <span class="text-navy-700">•</span>
+            <span class="text-emerald-400 flex items-center gap-1">
+              <!-- Sync Micro-Indicator (Also used for your secret micro-confirmation ping) -->
+              <span id="secretPingDot" class="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block transition-colors duration-200"></span> 
+              Hardware RNG Active
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- CENTER MATCH STATUS CHIP (Visible on Tablet/Desktop) -->
+      <div class="hidden md:flex items-center gap-3 px-3 py-1.5 rounded-xl bg-navy-950/80 border border-navy-800">
+        <div class="flex items-center gap-2 text-xs font-semibold text-slate-300">
+          <span class="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span>
+          <span class="font-display tracking-wider uppercase text-slate-200">LIVE PRE-MATCH</span>
+        </div>
+        <div class="h-3.5 w-px bg-navy-800"></div>
+        <span class="text-xs font-mono text-slate-400" id="currentUtcTime">14:30:00 UTC</span>
+      </div>
+
+      <!-- ========================================== -->
+      <!-- TRIGGER ZONE 2: TOP-RIGHT MATCH METADATA   -->
+      <!-- TRIPLE-TAP -> SECRET 90% TAILS             -->
+      <!-- ========================================== -->
+      <div class="flex items-center gap-2 sm:gap-3">
+        
+        <div id="triggerZoneTails" class="cursor-pointer bg-navy-950/90 border border-navy-800 hover:border-navy-700/80 px-2.5 sm:px-3 py-1.5 rounded-xl text-right select-none active:opacity-85 transition-all">
+          <div class="flex items-center gap-1.5 justify-end">
+            <span class="text-[9px] sm:text-[10px] font-mono tracking-widest text-slate-400 uppercase">MATCH OFFICIAL</span>
+            <span class="w-1 h-1 rounded-full bg-slate-500"></span>
+            <span class="text-[10px] font-bold text-amber-400 font-mono">#REF-09</span>
+          </div>
+          <div class="text-[11px] sm:text-xs font-bold text-slate-200 tracking-tight flex items-center gap-1 justify-end">
+            <svg class="w-3.5 h-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            </svg>
+            <span class="truncate max-w-[90px] sm:max-w-none">Lead Referee Verified</span>
+          </div>
+        </div>
+
+        <!-- Audio Toggle Button -->
+        <button id="soundBtn" class="p-2 sm:p-2.5 rounded-xl bg-navy-900 border border-navy-800 text-slate-300 hover:text-white hover:border-navy-700 transition-all shadow-sm" title="Toggle Acoustic Engine">
+          <svg id="soundOnIcon" class="w-4 h-4 text-gold-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+          </svg>
+          <svg id="soundOffIcon" class="w-4 h-4 text-slate-500 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2" />
+          </svg>
+        </button>
+
+        <!-- Fullscreen Mode for Referees on Tablets -->
+        <button id="fullscreenBtn" class="p-2 sm:p-2.5 rounded-xl bg-navy-900 border border-navy-800 text-slate-300 hover:text-white hover:border-navy-700 transition-all shadow-sm" title="Referee Fullscreen">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-5h-4m4 0v4m0-4l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+          </svg>
+        </button>
+
+      </div>
+    </div>
+  </header>
+
+  <!-- MATCH INFORMATION BANNER (Cricket/Football broadcast setup) -->
+  <section class="max-w-7xl w-full mx-auto px-3 sm:px-6 pt-4 pb-1">
+    <div class="bg-gradient-to-r from-navy-900/90 via-navy-850/80 to-navy-900/90 border border-navy-700/60 rounded-2xl p-3 sm:p-4 shadow-xl backdrop-blur-md flex flex-wrap items-center justify-between gap-4">
+      
+      <!-- Match Teams & Captains Bar -->
+      <div class="flex items-center gap-3 sm:gap-6 flex-wrap">
+        <!-- Team A -->
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-lg bg-blue-600/20 border border-blue-500/40 flex items-center justify-center font-display font-bold text-xs text-blue-400">
+            H
+          </div>
+          <div>
+            <div class="flex items-center gap-1.5">
+              <span id="teamANameDisplay" class="font-display font-bold text-sm tracking-wide text-white uppercase">MUMBAI WARRIORS</span>
+              <span class="text-[9px] px-1.5 py-0.2 rounded bg-blue-500/20 text-blue-300 font-mono">HOST</span>
+            </div>
+            <span class="text-[11px] text-slate-400 block" id="captainADisplay">Capt. R. Sharma</span>
+          </div>
+        </div>
+
+        <div class="font-display font-black text-slate-600 text-xs italic">VS</div>
+
+        <!-- Team B (Visiting Team) -->
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-lg bg-amber-600/20 border border-amber-500/40 flex items-center justify-center font-display font-bold text-xs text-amber-400">
+            V
+          </div>
+          <div>
+            <div class="flex items-center gap-1.5">
+              <span id="teamBNameDisplay" class="font-display font-bold text-sm tracking-wide text-white uppercase">LONDON TITANS</span>
+              <span class="text-[9px] px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 font-mono">CALLER</span>
+            </div>
+            <span class="text-[11px] text-slate-400 block" id="captainBDisplay">Capt. J. Buttler</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Setup & Pitch Spec Badges -->
+      <div class="flex items-center gap-2 text-xs">
+        <div class="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-navy-950 border border-navy-800 text-slate-300">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+          <span>Pitch: Hard Dry / Flat</span>
+        </div>
+
+        <button id="editMatchBtn" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-navy-800 hover:bg-navy-700 border border-navy-600/70 text-slate-200 font-medium transition-colors text-xs">
+          <svg class="w-3.5 h-3.5 text-gold-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+          </svg>
+          <span>Configure Match</span>
+        </button>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- MAIN STAGE -->
+  <main class="max-w-7xl w-full mx-auto px-3 sm:px-6 py-4 grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch flex-grow">
+    
+    <!-- LEFT: 3D OFFICIAL COIN TOSS ARENA (7 Columns) -->
+    <section class="lg:col-span-7 flex flex-col justify-between gap-4 bg-gradient-to-b from-navy-900/90 via-navy-900/60 to-navy-950/80 border border-navy-700/60 rounded-3xl p-5 sm:p-7 shadow-2xl relative overflow-hidden backdrop-blur-xl">
+      
+      <!-- Top Arena Header: Visiting Captain Call Control -->
+      <div class="w-full flex items-center justify-between flex-wrap gap-3 z-10">
+        <div>
+          <span class="text-[10px] font-mono tracking-wider text-slate-400 uppercase block">VISITING CAPTAIN CALL</span>
+          <span class="text-xs font-bold text-slate-200">Declared Call in Umpire's Presence:</span>
+        </div>
+
+        <div class="flex items-center gap-1.5 p-1 rounded-xl bg-navy-950 border border-navy-800">
+          <button id="callHeadsBtn" class="px-3.5 py-1.5 rounded-lg text-xs font-bold tracking-wider font-display transition-all bg-gradient-to-r from-gold-500 to-amber-500 text-navy-950 shadow-md">
+            HEADS
+          </button>
+          <button id="callTailsBtn" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold tracking-wider font-display transition-all text-slate-400 hover:text-white">
+            TAILS
+          </button>
+        </div>
+      </div>
+
+      <!-- 3D COIN STAGE -->
+      <div class="w-full min-h-[300px] sm:min-h-[340px] flex flex-col items-center justify-center relative my-2">
+        
+        <!-- Tournament Arena Turf Ring Graphics -->
+        <div class="absolute w-72 h-72 sm:w-80 sm:h-80 rounded-full border border-navy-700/40 pointer-events-none flex items-center justify-center">
+          <div class="w-56 h-56 sm:w-64 sm:h-64 rounded-full border border-dashed border-navy-600/30"></div>
+        </div>
+
+        <!-- 3D Scene Viewport -->
+        <div class="viewport-3d w-52 h-52 sm:w-56 sm:h-56 relative flex items-center justify-center">
+          
+          <!-- Realistic Ground Shadow (scales down on high arc toss) -->
+          <div id="coinShadow" class="absolute bottom-2 w-44 h-8 bg-black/70 rounded-full blur-md shadow-animating pointer-events-none scale-100 opacity-80"></div>
+
+          <!-- THE 3D COMMEMORATIVE COIN -->
+          <div id="coin3D" class="w-44 h-44 sm:w-48 sm:h-48 relative preserve-3d coin-animating cursor-pointer" title="Tap to execute official toss">
+            
+            <!-- FRONT: COMMEMORATIVE HEADS (24K Tournament Gold) -->
+            <div class="absolute inset-0 rounded-full backface-hidden coin-heads-face border-[5px] border-amber-300 flex flex-col items-center justify-center p-4 text-center z-20"
+                 style="transform: translateZ(9px);">
+              
+              <!-- Guilloche decorative ring -->
+              <div class="absolute inset-1.5 rounded-full border border-dashed border-amber-900/30 pointer-events-none"></div>
+
+              <!-- Official Federation Eagle / Trophy Icon -->
+              <div class="w-14 h-14 rounded-full bg-gradient-to-b from-amber-100 to-amber-300 flex items-center justify-center shadow-inner mb-1 border border-amber-500/80">
+                <svg class="w-8 h-8 text-amber-950" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M5 3h14a2 2 0 012 2v2a5 5 0 01-4.16 4.92A6 6 0 0113 16.92V19h3a1 1 0 110 2H8a1 1 0 110-2h3v-2.08A6 6 0 017.16 11.92 5 5 0 013 7V5a2 2 0 012-2zm0 4a3 3 0 002.83 3H8V5H5v2zm14 0V5h-3v5h.17A3 3 0 0019 7z"/>
+                </svg>
+              </div>
+
+              <span class="font-display font-black text-amber-950 tracking-widest text-lg leading-none drop-shadow-sm uppercase">HEADS</span>
+              <span class="text-[9px] font-mono font-bold tracking-widest text-amber-900/90 mt-1 uppercase">WORLD TOURNAMENT</span>
+            </div>
+
+            <!-- PHYSICAL RIM LAYERS (18 layers creating real, thick solid milled coin physics) -->
+            <div class="coin-edge-layer" style="transform: translateZ(7px);"></div>
+            <div class="coin-edge-layer" style="transform: translateZ(5px);"></div>
+            <div class="coin-edge-layer" style="transform: translateZ(3px);"></div>
+            <div class="coin-edge-layer" style="transform: translateZ(1px);"></div>
+            <div class="coin-edge-layer" style="transform: translateZ(0px);"></div>
+            <div class="coin-edge-layer" style="transform: translateZ(-1px);"></div>
+            <div class="coin-edge-layer" style="transform: translateZ(-3px);"></div>
+            <div class="coin-edge-layer" style="transform: translateZ(-5px);"></div>
+            <div class="coin-edge-layer" style="transform: translateZ(-7px);"></div>
+
+            <!-- BACK: COMMEMORATIVE TAILS (Silver Tournament Reserve) -->
+            <div class="absolute inset-0 rounded-full backface-hidden coin-tails-face border-[5px] border-slate-300 flex flex-col items-center justify-center p-4 text-center z-10"
+                 style="transform: rotateY(180deg) translateZ(9px);">
+              
+              <div class="absolute inset-1.5 rounded-full border border-dashed border-slate-600/30 pointer-events-none"></div>
+
+              <!-- Crest Icon for Tails -->
+              <div class="w-14 h-14 rounded-full bg-gradient-to-b from-slate-100 to-slate-300 flex items-center justify-center shadow-inner mb-1 border border-slate-400">
+                <svg class="w-8 h-8 text-slate-800" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+
+              <span class="font-display font-black text-slate-900 tracking-widest text-lg leading-none drop-shadow-sm uppercase">TAILS</span>
+              <span class="text-[9px] font-mono font-bold tracking-widest text-slate-800/90 mt-1 uppercase">CHAMPIONSHIP SERIES</span>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Live Umpire Toss Callout Overlay -->
+        <div id="tossResultBanner" class="mt-4 px-4 py-2 rounded-xl bg-navy-950/90 border border-navy-800 text-xs sm:text-sm font-medium text-slate-300 flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+          <span>Ready for toss. Lead referee tap coin or press Execute.</span>
+        </div>
+      </div>
+
+      <!-- Bottom Arena Controls -->
+      <div class="w-full grid grid-cols-1 sm:grid-cols-4 gap-2.5">
+        <button id="executeTossBtn" class="sm:col-span-3 py-3.5 px-6 rounded-2xl bg-gradient-to-r from-gold-500 via-yellow-400 to-gold-500 hover:from-gold-400 hover:to-yellow-300 text-navy-950 font-display font-extrabold text-base tracking-wider uppercase flex items-center justify-center gap-2.5 shadow-xl shadow-gold-500/20 active:scale-[0.98] transition-all">
+          <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24">
+            <path d="M8 5v14l11-7z"/>
+          </svg>
+          <span>EXECUTE OFFICIAL TOSS</span>
+        </button>
+
+        <button id="quickTossBtn" class="sm:col-span-1 py-3.5 px-4 rounded-2xl bg-navy-950 hover:bg-navy-850 border border-navy-700 text-slate-200 font-display font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all active:scale-95">
+          <svg class="w-4 h-4 text-gold-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+          </svg>
+          <span>Instant</span>
+        </button>
+      </div>
+
+    </section>
+
+    <!-- RIGHT: BROADCAST MATCH LOG & OFFICIAL VERIFICATION (5 Columns) -->
+    <section class="lg:col-span-5 flex flex-col justify-between gap-4">
+      
+      <!-- Official Post-Toss Decision Modal Card -->
+      <div id="decisionCard" class="bg-navy-900/90 border border-navy-700/70 rounded-3xl p-5 shadow-xl backdrop-blur-xl">
+        <div class="flex items-center justify-between pb-3 border-b border-navy-800">
+          <div class="flex items-center gap-2">
+            <svg class="w-4 h-4 text-gold-400" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 10h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"/>
+            </svg>
+            <h3 class="font-display font-bold text-sm tracking-wider uppercase text-white">Toss Winner Decision</h3>
+          </div>
+          <span id="decisionStatusBadge" class="text-[10px] font-mono px-2 py-0.5 rounded bg-navy-950 border border-navy-800 text-slate-400">
+            Awaiting Toss
+          </span>
+        </div>
+
+        <div class="py-3 flex flex-col gap-2.5">
+          <div class="text-xs text-slate-300">
+            Winner: <strong id="tossWinnerDisplay" class="text-gold-400 font-display text-sm tracking-wide">None Yet</strong>
+          </div>
+          
+          <div class="text-[11px] text-slate-400">Winning Captain Elects To:</div>
+          <div class="grid grid-cols-2 gap-2">
+            <button id="electBatBtn" disabled class="py-2.5 px-3 rounded-xl bg-navy-950 border border-navy-800 text-slate-400 font-display font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all disabled:opacity-40">
+              🏏 Elect to Bat
+            </button>
+            <button id="electBowlBtn" disabled class="py-2.5 px-3 rounded-xl bg-navy-950 border border-navy-800 text-slate-400 font-display font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all disabled:opacity-40">
+              ⚾ Elect to Bowl
+            </button>
+          </div>
+        </div>
+
+        <div id="confirmedDecisionBox" class="mt-1 p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs hidden">
+          Official Decision Recorded & Signed by Match Referee.
+        </div>
+      </div>
+
+      <!-- Official Match Toss Record Log -->
+      <div class="bg-navy-900/90 border border-navy-700/70 rounded-3xl p-5 shadow-xl backdrop-blur-xl flex-grow flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between pb-3 border-b border-navy-800">
+            <h3 class="font-display font-bold text-sm tracking-wider uppercase text-white flex items-center gap-2">
+              <svg class="w-4 h-4 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+              </svg>
+              Tournament Log
+            </h3>
+            <span class="text-[10px] font-mono text-slate-400">Electronic Ledger</span>
+          </div>
+
+          <!-- Toss History Stream -->
+          <div id="tossHistoryContainer" class="mt-3 flex flex-col gap-2 max-h-[160px] overflow-y-auto pr-1">
+            <div class="text-xs text-slate-500 text-center py-4 italic">No official toss logged for current match session.</div>
+          </div>
+        </div>
+
+        <!-- Session Aggregate Counters (Clean, normal referee distribution display) -->
+        <div class="pt-3 border-t border-navy-800 mt-3 grid grid-cols-3 gap-2 text-center">
+          <div class="bg-navy-950 p-2 rounded-xl border border-navy-800">
+            <span class="text-[9px] text-slate-400 font-mono block">TOTAL CALLS</span>
+            <span id="sessionTotalCount" class="font-mono font-bold text-sm text-slate-100">0</span>
+          </div>
+          <div class="bg-navy-950 p-2 rounded-xl border border-navy-800">
+            <span class="text-[9px] text-gold-400 font-mono block">HEADS (H)</span>
+            <span id="sessionHeadsCount" class="font-mono font-bold text-sm text-gold-400">0</span>
+          </div>
+          <div class="bg-navy-950 p-2 rounded-xl border border-navy-800">
+            <span class="text-[9px] text-slate-300 font-mono block">TAILS (T)</span>
+            <span id="sessionTailsCount" class="font-mono font-bold text-sm text-slate-300">0</span>
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- ========================================== -->
+  <!-- TRIGGER ZONE 3: OFFICIAL FOOTER PROTOCOL   -->
+  <!-- TRIPLE-TAP -> RESET TO TRUE 50/50 FAIR     -->
+  <!-- ========================================== -->
+  <footer id="triggerZoneFair" class="w-full bg-navy-900 border-t border-navy-800 py-3 px-4 sm:px-6 cursor-pointer select-none active:opacity-85 transition-opacity" title="Tournament Cryptographic Protocol">
+    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2 text-center sm:text-left">
+      <div class="flex items-center gap-2 text-[11px] text-slate-400">
+        <svg class="w-3.5 h-3.5 text-emerald-400" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+        </svg>
+        <span>Certified NIST-SP800-90A Hardware Pseudo-Random Engine v4.2</span>
+      </div>
+      <div class="text-[10px] text-slate-500 font-mono">
+        OFFICIAL MATCH PROTOCOL • FIFA/ICC COMMEMORATIVE SPECIFICATION
+      </div>
+    </div>
+  </footer>
+
+  <!-- EDIT MATCH DETAILS MODAL -->
+  <div id="matchModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-navy-900 border border-navy-700 max-w-md w-full rounded-3xl p-6 shadow-2xl flex flex-col gap-4">
+      <div class="flex items-center justify-between pb-3 border-b border-navy-800">
+        <h3 class="font-display font-bold text-base text-white uppercase tracking-wider">Configure Match Toss</h3>
+        <button id="closeModalBtn" class="text-slate-400 hover:text-white p-1">
+          ✕
+        </button>
+      </div>
+
+      <div class="space-y-3 text-xs">
+        <div>
+          <label class="block text-slate-400 font-medium mb-1">Host Team Name</label>
+          <input type="text" id="inputTeamA" value="MUMBAI WARRIORS" class="w-full bg-navy-950 border border-navy-800 rounded-xl px-3 py-2 text-white font-semibold focus:outline-none focus:border-gold-400">
+        </div>
+        <div>
+          <label class="block text-slate-400 font-medium mb-1">Host Captain</label>
+          <input type="text" id="inputCaptainA" value="R. Sharma" class="w-full bg-navy-950 border border-navy-800 rounded-xl px-3 py-2 text-white font-semibold focus:outline-none focus:border-gold-400">
+        </div>
+        <div>
+          <label class="block text-slate-400 font-medium mb-1">Visiting Team (Caller)</label>
+          <input type="text" id="inputTeamB" value="LONDON TITANS" class="w-full bg-navy-950 border border-navy-800 rounded-xl px-3 py-2 text-white font-semibold focus:outline-none focus:border-gold-400">
+        </div>
+        <div>
+          <label class="block text-slate-400 font-medium mb-1">Visiting Captain</label>
+          <input type="text" id="inputCaptainB" value="J. Buttler" class="w-full bg-navy-950 border border-navy-800 rounded-xl px-3 py-2 text-white font-semibold focus:outline-none focus:border-gold-400">
+        </div>
+      </div>
+
+      <button id="saveMatchBtn" class="w-full py-3 rounded-xl bg-gold-500 hover:bg-gold-400 text-navy-950 font-display font-bold text-xs uppercase tracking-wider transition-all mt-2">
+        Save Match Setup
+      </button>
+    </div>
+  </div>
+
+  <!-- SCRIPT LOGIC: BROADCAST ENGINE & STEALTH TRIGGERS -->
+  <script>
+    // =========================================================================
+    // COVERT STEALTH ENGINE (ABSOLUTELY NO TRACE ON SCREEN)
+    // Modes:
+    // 'heads' -> 90% Heads, 10% Tails
+    // 'tails' -> 90% Tails, 10% Heads
+    // 'fair'  -> 50% Heads, 50% Tails
+    // =========================================================================
+    let secretMode = 'heads'; // Initial default as requested (90% Heads)
+
+    // State Variables
+    let isTossing = false;
+    let declaredCall = 'heads';
+    let currentCoinFace = 'heads';
+    let soundEnabled = true;
+
+    let matchData = {
+      teamA: 'MUMBAI WARRIORS',
+      captainA: 'R. Sharma',
+      teamB: 'LONDON TITANS',
+      captainB: 'J. Buttler',
+    };
+
+    let sessionStats = {
+      total: 0,
+      heads: 0,
+      tails: 0,
+    };
+
+    let latestTossWinner = null;
+
+    // DOM Elements
+    const triggerZoneHeads = document.getElementById('triggerZoneHeads');
+    const triggerZoneTails = document.getElementById('triggerZoneTails');
+    const triggerZoneFair = document.getElementById('triggerZoneFair');
+    const secretPingDot = document.getElementById('secretPingDot');
+
+    const coin3D = document.getElementById('coin3D');
+    const coinShadow = document.getElementById('coinShadow');
+    const tossResultBanner = document.getElementById('tossResultBanner');
+    const executeTossBtn = document.getElementById('executeTossBtn');
+    const quickTossBtn = document.getElementById('quickTossBtn');
+
+    const callHeadsBtn = document.getElementById('callHeadsBtn');
+    const callTailsBtn = document.getElementById('callTailsBtn');
+
+    const soundBtn = document.getElementById('soundBtn');
+    const soundOnIcon = document.getElementById('soundOnIcon');
+    const soundOffIcon = document.getElementById('soundOffIcon');
+    const fullscreenBtn = document.getElementById('fullscreenBtn');
+
+    const decisionStatusBadge = document.getElementById('decisionStatusBadge');
+    const tossWinnerDisplay = document.getElementById('tossWinnerDisplay');
+    const electBatBtn = document.getElementById('electBatBtn');
+    const electBowlBtn = document.getElementById('electBowlBtn');
+    const confirmedDecisionBox = document.getElementById('confirmedDecisionBox');
+    const tossHistoryContainer = document.getElementById('tossHistoryContainer');
+
+    const sessionTotalCount = document.getElementById('sessionTotalCount');
+    const sessionHeadsCount = document.getElementById('sessionHeadsCount');
+    const sessionTailsCount = document.getElementById('sessionTailsCount');
+
+    // Modal elements
+    const editMatchBtn = document.getElementById('editMatchBtn');
+    const matchModal = document.getElementById('matchModal');
+    const closeModalBtn = document.getElementById('closeModalBtn');
+    const saveMatchBtn = document.getElementById('saveMatchBtn');
+    const inputTeamA = document.getElementById('inputTeamA');
+    const inputCaptainA = document.getElementById('inputCaptainA');
+    const inputTeamB = document.getElementById('inputTeamB');
+    const inputCaptainB = document.getElementById('inputCaptainB');
+
+    // Live UTC Clock updater
+    function updateClock() {
+      const now = new Date();
+      const h = String(now.getUTCHours()).padStart(2, '0');
+      const m = String(now.getUTCMinutes()).padStart(2, '0');
+      const s = String(now.getUTCSeconds()).padStart(2, '0');
+      const clockEl = document.getElementById('currentUtcTime');
+      if (clockEl) clockEl.textContent = `${h}:${m}:${s} UTC`;
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    // =========================================================================
+    // IMPERCEPTIBLE CONFIRMATION FEEDBACK (ONLY FOR YOU)
+    // 15ms vibration + 100ms micro-tint flash on the battery/sync dot
+    // Bystanders will only think it's a normal background sync ping!
+    // =========================================================================
+    function triggerSecretConfirmation(modeType) {
+      // 1. Silent micro-vibration if supported on mobile device
+      if (navigator.vibrate) {
+        if (modeType === 'heads') {
+          navigator.vibrate(15); // Single 15ms micro-buzz for Heads
+        } else if (modeType === 'tails') {
+          navigator.vibrate([15, 30, 15]); // Double micro-buzz for Tails
+        } else {
+          navigator.vibrate(35); // 35ms buzz for Fair
+        }
+      }
+
+      // 2. Microscopic 1-frame dot color shift (Emerald -> Slate -> Emerald)
+      if (secretPingDot) {
+        secretPingDot.classList.remove('bg-emerald-400');
+        secretPingDot.classList.add('bg-amber-300');
+        setTimeout(() => {
+          secretPingDot.classList.remove('bg-amber-300');
+          secretPingDot.classList.add('bg-emerald-400');
+        }, 120);
+      }
+    }
+
+    // =========================================================================
+    // MULTI-TAP TRIGGER DETECTORS (Clean 3-tap logic with 380ms auto-reset)
+    // =========================================================================
+    function setupSecretTripleTap(element, targetMode) {
+      let clickCount = 0;
+      let timer = null;
+
+      element.addEventListener('click', (e) => {
+        clickCount++;
+        clearTimeout(timer);
+
+        timer = setTimeout(() => {
+          if (clickCount >= 3) {
+            secretMode = targetMode;
+            triggerSecretConfirmation(targetMode);
+          }
+          clickCount = 0;
+        }, 380);
+      });
+    }
+
+    // Zone 1: Triple-tap Top-Left Brand -> 90% HEADS
+    setupSecretTripleTap(triggerZoneHeads, 'heads');
+
+    // Zone 2: Triple-tap Top-Right Referee Badge -> 90% TAILS
+    setupSecretTripleTap(triggerZoneTails, 'tails');
+
+    // Zone 3: Triple-tap Footer Protocol -> TRUE 50/50 FAIR
+    setupSecretTripleTap(triggerZoneFair, 'fair');
+
+    // BACKUP SECRET KEYBOARD SHORTCUTS: 'H' for Heads, 'T' for Tails, 'F' for Fair
+    window.addEventListener('keydown', (e) => {
+      // Don't trigger if typing in modal input
+      if (e.target.tagName === 'INPUT') return;
+
+      const key = e.key.toLowerCase();
+      if (key === 'h') {
+        secretMode = 'heads';
+        triggerSecretConfirmation('heads');
+      } else if (key === 't') {
+        secretMode = 'tails';
+        triggerSecretConfirmation('tails');
+      } else if (key === 'f') {
+        secretMode = 'fair';
+        triggerSecretConfirmation('fair');
+      } else if (e.code === 'Space' && !isTossing) {
+        e.preventDefault();
+        startToss(false);
+      }
+    });
+
+    // =========================================================================
+    // BROADCAST WEBAUDIO ACOUSTIC SYNTHESIS ENGINE
+    // =========================================================================
+    let audioCtx = null;
+
+    function initAudioContext() {
+      if (!audioCtx) {
+        const AudioClass = window.AudioContext || window.webkitAudioContext;
+        if (AudioClass) {
+          audioCtx = new AudioClass();
+        }
+      }
+      if (audioCtx && audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+    }
+
+    function playSoundEffect(type) {
+      if (!soundEnabled) return;
+      initAudioContext();
+      if (!audioCtx) return;
+
+      const now = audioCtx.currentTime;
+
+      if (type === 'toss') {
+        // Multi-frequency metallic coin flick with resonance
+        const osc1 = audioCtx.createOscillator();
+        const osc2 = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+
+        osc1.type = 'sine';
+        osc1.frequency.setValueAtTime(2600, now);
+        osc1.frequency.exponentialRampToValueAtTime(1200, now + 0.35);
+
+        osc2.type = 'triangle';
+        osc2.frequency.setValueAtTime(3900, now);
+        osc2.frequency.exponentialRampToValueAtTime(1800, now + 0.28);
+
+        gain.gain.setValueAtTime(0.35, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
+
+        osc1.connect(gain);
+        osc2.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        osc1.start(now);
+        osc2.start(now);
+        osc1.stop(now + 0.45);
+        osc2.stop(now + 0.45);
+      } else if (type === 'land') {
+        // Heavy referee commemorative coin strike & settle clink
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(1100, now);
+        osc.frequency.exponentialRampToValueAtTime(280, now + 0.25);
+
+        gain.gain.setValueAtTime(0.4, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        osc.start(now);
+        osc.stop(now + 0.25);
+      }
+    }
+
+    // =========================================================================
+    // DETERMINISTIC BIAS COMPUTATION
+    // =========================================================================
+    function getNextOutcome() {
+      if (secretMode === 'heads') {
+        // 90% Heads, 10% Tails
+        return Math.random() < 0.90 ? 'heads' : 'tails';
+      } else if (secretMode === 'tails') {
+        // 90% Tails, 10% Heads
+        return Math.random() < 0.90 ? 'tails' : 'heads';
+      } else {
+        // True Fair 50/50
+        return Math.random() < 0.50 ? 'heads' : 'tails';
+      }
+    }
+
+    // =========================================================================
+    // 3D COIN TOSS ANIMATION
+    // =========================================================================
+    function startToss(isInstant = false) {
+      if (isTossing) return;
+      isTossing = true;
+      initAudioContext();
+      playSoundEffect('toss');
+
+      // Update Arena Status
+      tossResultBanner.innerHTML = `
+        <span class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
+        <span class="text-amber-300 font-semibold tracking-wide">Coin in flight... Rotating under referee observation</span>
+      `;
+      executeTossBtn.disabled = true;
+      quickTossBtn.disabled = true;
+      electBatBtn.disabled = true;
+      electBowlBtn.disabled = true;
+      confirmedDecisionBox.classList.add('hidden');
+
+      const outcome = getNextOutcome();
+
+      if (isInstant) {
+        completeToss(outcome);
+        return;
+      }
+
+      // Physics Calculation: 5 to 7 full 360-degree vertical rotations
+      const totalSpins = 5 + Math.floor(Math.random() * 2);
+      // Heads faces 0deg (+360*k), Tails faces 180deg
+      const targetDegY = (totalSpins * 360) + (outcome === 'heads' ? 0 : 180);
+      const randomWobbleX = (Math.random() - 0.5) * 22;
+      const randomWobbleZ = (Math.random() - 0.5) * 16;
+
+      // Toss coin in high arc (-115px) & shrink shadow
+      coinShadow.style.transform = 'scale(0.35)';
+      coinShadow.style.opacity = '0.25';
+      coin3D.style.transform = `translateY(-115px) rotateX(${randomWobbleX}deg) rotateY(${targetDegY}deg) rotateZ(${randomWobbleZ}deg)`;
+
+      setTimeout(() => {
+        completeToss(outcome);
+      }, 1550);
+    }
+
+    function completeToss(outcome) {
+      playSoundEffect('land');
+      currentCoinFace = outcome;
+
+      // Settle coin flat on turf
+      coin3D.style.transform = `translateY(0px) rotateX(0deg) rotateY(${outcome === 'heads' ? 0 : 180}deg) rotateZ(0deg)`;
+      coinShadow.style.transform = 'scale(1)';
+      coinShadow.style.opacity = '0.8';
+
+      // Determine Winner
+      // Visiting team called either Heads or Tails
+      const visitorCalled = declaredCall;
+      const visitorWon = (outcome === visitorCalled);
+      latestTossWinner = visitorWon ? matchData.teamB : matchData.teamA;
+      const winningCaptain = visitorWon ? matchData.captainB : matchData.captainA;
+
+      // Update UI Banner
+      tossResultBanner.innerHTML = `
+        <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+        <span>Landed on <strong class="${outcome === 'heads' ? 'text-gold-400' : 'text-slate-200'} uppercase font-bold">${outcome}</strong> • Winner: <strong class="text-white">${latestTossWinner}</strong></span>
+      `;
+
+      // Enable Decision Selection
+      decisionStatusBadge.textContent = 'Decision Pending';
+      decisionStatusBadge.className = 'text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/10 border border-amber-500/30 text-amber-400 font-bold';
+      tossWinnerDisplay.textContent = `${latestTossWinner} (${winningCaptain})`;
+      electBatBtn.disabled = false;
+      electBowlBtn.disabled = false;
+
+      // Update Session Stats
+      sessionStats.total++;
+      if (outcome === 'heads') sessionStats.heads++;
+      else sessionStats.tails++;
+
+      sessionTotalCount.textContent = sessionStats.total;
+      sessionHeadsCount.textContent = sessionStats.heads;
+      sessionTailsCount.textContent = sessionStats.tails;
+
+      // Add to Broadcast Log
+      appendTossRecord(outcome, latestTossWinner);
+
+      // Re-enable Toss Buttons
+      isTossing = false;
+      executeTossBtn.disabled = false;
+      quickTossBtn.disabled = false;
+    }
+
+    // Append entry to official ledger
+    function appendTossRecord(resultFace, winnerName) {
+      const now = new Date();
+      const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+
+      // Remove empty state message if first toss
+      if (sessionStats.total === 1) {
+        tossHistoryContainer.innerHTML = '';
+      }
+
+      const item = document.createElement('div');
+      item.className = 'p-2.5 rounded-xl bg-navy-950/80 border border-navy-800 text-xs flex items-center justify-between animate-fadeIn';
+      item.innerHTML = `
+        <div class="flex items-center gap-2">
+          <span class="w-6 h-6 rounded-full flex items-center justify-center font-display font-bold text-[11px] ${
+            resultFace === 'heads' 
+              ? 'bg-gold-500/20 text-gold-400 border border-gold-500/40' 
+              : 'bg-slate-500/20 text-slate-300 border border-slate-500/40'
+          }">
+            ${resultFace === 'heads' ? 'H' : 'T'}
+          </span>
+          <div>
+            <span class="font-bold text-slate-200">${winnerName}</span>
+            <span class="text-[10px] text-slate-500 block">Called ${declaredCall.toUpperCase()} • Result: ${resultFace.toUpperCase()}</span>
+          </div>
+        </div>
+        <span class="font-mono text-[10px] text-slate-500">${timeStr}</span>
+      `;
+      tossHistoryContainer.prepend(item);
+    }
+
+    // =========================================================================
+    // EVENT LISTENERS & UI WIRING
+    // =========================================================================
+    
+    // Call Button Toggles (Visiting Captain)
+    callHeadsBtn.addEventListener('click', () => {
+      declaredCall = 'heads';
+      callHeadsBtn.className = 'px-3.5 py-1.5 rounded-lg text-xs font-bold tracking-wider font-display transition-all bg-gradient-to-r from-gold-500 to-amber-500 text-navy-950 shadow-md';
+      callTailsBtn.className = 'px-3.5 py-1.5 rounded-lg text-xs font-semibold tracking-wider font-display transition-all text-slate-400 hover:text-white';
+    });
+
+    callTailsBtn.addEventListener('click', () => {
+      declaredCall = 'tails';
+      callTailsBtn.className = 'px-3.5 py-1.5 rounded-lg text-xs font-bold tracking-wider font-display transition-all bg-gradient-to-r from-slate-200 to-slate-400 text-navy-950 shadow-md';
+      callHeadsBtn.className = 'px-3.5 py-1.5 rounded-lg text-xs font-semibold tracking-wider font-display transition-all text-slate-400 hover:text-white';
+    });
+
+    // Toss Triggers
+    coin3D.addEventListener('click', () => startToss(false));
+    executeTossBtn.addEventListener('click', () => startToss(false));
+    quickTossBtn.addEventListener('click', () => startToss(true));
+
+    // Decision Choices (Bat / Bowl)
+    electBatBtn.addEventListener('click', () => {
+      confirmedDecisionBox.textContent = `Official: ${latestTossWinner} won the toss and elected to BAT first.`;
+      confirmedDecisionBox.classList.remove('hidden');
+      decisionStatusBadge.textContent = 'Toss Completed';
+      decisionStatusBadge.className = 'text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-bold';
+      electBatBtn.disabled = true;
+      electBowlBtn.disabled = true;
+    });
+
+    electBowlBtn.addEventListener('click', () => {
+      confirmedDecisionBox.textContent = `Official: ${latestTossWinner} won the toss and elected to BOWL first.`;
+      confirmedDecisionBox.classList.remove('hidden');
+      decisionStatusBadge.textContent = 'Toss Completed';
+      decisionStatusBadge.className = 'text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-bold';
+      electBatBtn.disabled = true;
+      electBowlBtn.disabled = true;
+    });
+
+    // Sound Toggle
+    soundBtn.addEventListener('click', () => {
+      soundEnabled = !soundEnabled;
+      if (soundEnabled) {
+        soundOnIcon.classList.remove('hidden');
+        soundOffIcon.classList.add('hidden');
+        initAudioContext();
+        playSoundEffect('land');
+      } else {
+        soundOnIcon.classList.add('hidden');
+        soundOffIcon.classList.remove('hidden');
+      }
+    });
+
+    // Fullscreen Toggle
+    fullscreenBtn.addEventListener('click', () => {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      } else {
+        if (document.exitFullscreen) {
+          document.exitFullscreen();
+        }
+      }
+    });
+
+    // Modal Handlers
+    editMatchBtn.addEventListener('click', () => {
+      inputTeamA.value = matchData.teamA;
+      inputCaptainA.value = matchData.captainA;
+      inputTeamB.value = matchData.teamB;
+      inputCaptainB.value = matchData.captainB;
+      matchModal.classList.remove('hidden');
+    });
+
+    closeModalBtn.addEventListener('click', () => {
+      matchModal.classList.add('hidden');
+    });
+
+    saveMatchBtn.addEventListener('click', () => {
+      matchData.teamA = inputTeamA.value.trim() || 'HOST TEAM';
+      matchData.captainA = inputCaptainA.value.trim() || 'Captain A';
+      matchData.teamB = inputTeamB.value.trim() || 'VISITING TEAM';
+      matchData.captainB = inputCaptainB.value.trim() || 'Captain B';
+
+      document.getElementById('teamANameDisplay').textContent = matchData.teamA;
+      document.getElementById('captainADisplay').textContent = `Capt. ${matchData.captainA}`;
+      document.getElementById('teamBNameDisplay').textContent = matchData.teamB;
+      document.getElementById('captainBDisplay').textContent = `Capt. ${matchData.captainB}`;
+
+      matchModal.classList.add('hidden');
+    });
+  </script>
+</body>
+</html>
+```
